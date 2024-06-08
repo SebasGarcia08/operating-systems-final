@@ -25,7 +25,7 @@ function Monitor-Memory {
 
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
-    $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
+    $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.powershell.csv"
     # Initialize CSV with header
     "Timestamp,ProcessId,MemoryUsage (KB)" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
@@ -49,7 +49,7 @@ function Monitor-Disks {
 
     # Monitorear una ruta específica
     $path = Read-Host "Ingrese la ruta para monitorear"
-    $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
+    $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.powershell.csv"
     # Initialize CSV with header
     "Timestamp,FilePath,LastAccessTime" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
@@ -81,7 +81,7 @@ function Monitor-CPU {
 
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
-    $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
+    $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.powershell.csv"
     # Initialize CSV with header
     "Timestamp,ProcessId,CPUUsage (%)" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
