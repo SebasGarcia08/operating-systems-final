@@ -55,8 +55,6 @@ function Monitor-Disks {
     $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
     Start-Job -ScriptBlock {
         param($path, $outputPath)
-        $header = "Timestamp,File Path,Last Access Time"
-        $header | Out-File -FilePath $outputPath -Encoding UTF8
         for ($i = 0; $i -lt 3000; $i++) {
             $fileUsage = Get-ChildItem -Path $path -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
             foreach ($file in $fileUsage) {
@@ -85,8 +83,6 @@ function Monitor-CPU {
     $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
-        $header = "Timestamp,Process ID,CPU Usage (%)"
-        $header | Out-File -FilePath $outputPath -Encoding UTF8
         for ($i = 0; $i -lt 3000; $i++) {
             $cpuUsage = (ps -p $processId -o pcpu=)
             [PSCustomObject]@{ Timestamp = (Get-Date); ProcessId = $processId; CPUUsage = $cpuUsage } | ConvertTo-Csv -NoTypeInformation -Append | Out-File -FilePath $outputPath -Append -Encoding UTF8
