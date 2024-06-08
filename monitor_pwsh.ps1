@@ -1,4 +1,4 @@
-# Script en PowerShell
+# Script en PowerShell para Linux
 function Show-Menu {
     param (
         [string]$title = 'Menu'
@@ -12,26 +12,24 @@ function Show-Menu {
 
 function Monitor-Memory {
     # Listado de top 10 de uso de memoria por proceso
-    Get-Process | Sort-Object -Property WorkingSet -Descending | Select-Object -First 10
+    Write-Output "========================== START - top 10 de uso de memoria por proceso =========================="
+    ps -eo pid,pmem,comm --sort=-pmem | head -n 11
+    Write-Output "========================== END - top 10 de uso de memoria por proceso =========================="
 
     # Estado general de memoria
-    $memInfo = Get-WmiObject -Class Win32_OperatingSystem
-    $totalMemory = [math]::round($memInfo.TotalVisibleMemorySize / 1KB, 2)
-    $freeMemory = [math]::round($memInfo.FreePhysicalMemory / 1KB, 2)
-    $usedMemory = $totalMemory - $freeMemory
-    Write-Output "Total Physical Memory: $totalMemory MB"
-    Write-Output "Used Physical Memory: $usedMemory MB"
-    Write-Output "Free Physical Memory: $freeMemory MB"
+    Write-Output "========================== START - Estado general de memoria =========================="
+    free -h
+    Write-Output "========================== END - Estado general de memoria =========================="
 
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
-    $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.powershell.csv"
+    $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
     # Initialize CSV with header
     "Timestamp,ProcessId,MemoryUsage (KB)" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
         for ($i = 0; $i -lt 3000; $i++) {
-            $memoryUsage = (Get-Process -Id $processId).WorkingSet / 1KB
+            $memoryUsage = (ps -p $processId -o pmem=)
             $line = "{0},{1},{2}" -f (Get-Date), $processId, $memoryUsage
             $line | Out-File -FilePath $outputPath -Append -Encoding UTF8
             Start-Sleep -Milliseconds 100
@@ -42,18 +40,20 @@ function Monitor-Memory {
 
 function Monitor-Disks {
     # Listado de top 10 de archivos más grandes en el sistema
-    Write-Output "========================== START - Listado de top 10 de archivos más grandes en el sistema =========================="
-    Get-ChildItem -Path C:\ -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property Length -Descending | Select-Object -First 10
-    Write-Output "========================== END - Listado de top 10 de archivos más grandes en el sistema =========================="
+    Write-Output "========================== START - Top 10 de archivos más grandes en el sistema =========================="
+    $largestFiles = & find / -type f -exec du -h {} + | sort -rh | head -n 10
+    Write-Output $largestFiles
+    Write-Output "========================== END - Top 10 de archivos más grandes en el sistema =========================="
 
     # Estado general de los discos por partición
     Write-Output "========================== START - Estado general de los discos por partición =========================="
-    Get-PSDrive -PSProvider FileSystem
+    $diskInfo = df -h
+    Write-Output $diskInfo
     Write-Output "========================== END - Estado general de los discos por partición =========================="
 
     # Monitorear una ruta específica
     $path = Read-Host "Ingrese la ruta para monitorear"
-    $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.powershell.csv"
+    $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
     # Initialize CSV with header
     "Timestamp,FilePath,LastAccessTime" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
@@ -73,25 +73,24 @@ function Monitor-Disks {
 function Monitor-CPU {
     # Listado de top 10 de procesos con mayor uso de CPU
     Write-Output "========================== START - top 10 de procesos con mayor uso de CPU =========================="
-    Write-Output "ProcessName, ID, CPU, WorkingSet, VirtualMemorySize, TotalProcessorTime, UserProcessorTime, PrivilegedProcessorTime"
-    Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10 | Format-Table -Property ProcessName, Id, CPU, WorkingSet, VirtualMemorySize, TotalProcessorTime, UserProcessorTime, PrivilegedProcessorTime
+    Write-Output "ProcessName, ID, CPU, RSS, VSZ, TIME+"
+    ps -eo pid,pcpu,comm --sort=-pcpu | head -n 11
     Write-Output "========================== END - top 10 de procesos con mayor uso de CPU =========================="
 
     # Estado general de la CPU
     Write-Output "========================== START - Estado general de la CPU =========================="
-    $cpuInfo = Get-WmiObject -Class Win32_Processor | Select-Object -Property LoadPercentage
-    Write-Output $cpuInfo
+    top -b -n1 | grep "Cpu(s)"
     Write-Output "========================== END - Estado general de la CPU =========================="
 
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
-    $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.powershell.csv"
+    $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
     # Initialize CSV with header
     "Timestamp,ProcessId,CPUUsage (%)" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
         for ($i = 0; $i -lt 3000; $i++) {
-            $cpuUsage = (Get-Process -Id $processId).CPU
+            $cpuUsage = (ps -p $processId -o pcpu=)
             $line = "{0},{1},{2}" -f (Get-Date), $processId, $cpuUsage
             $line | Out-File -FilePath $outputPath -Append -Encoding UTF8
             Start-Sleep -Milliseconds 100
