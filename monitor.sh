@@ -19,8 +19,12 @@ monitor_memory() {
     read -p "Ingrese el ID del proceso para monitorear: " process_id
     (
         for i in {1..3000}; do
-            memory_usage=$(ps -p $process_id -o %mem --no-headers)
-            echo "$(date): $memory_usage" >> MemoryUsageReport.txt
+            memory_usage=$(ps -p $process_id -o %mem --no-headers 2>/dev/null)
+            if [ $? -eq 0 ]; then
+                echo "$(date): $memory_usage" >> MemoryUsageReport.txt
+            else
+                echo "$(date): Error fetching memory usage for PID $process_id" >> MemoryUsageReport.txt
+            fi
             sleep 0.1
         done
     ) &
@@ -28,7 +32,7 @@ monitor_memory() {
 
 monitor_disks() {
     # Listado de top 10 de archivos más grandes en el sistema
-    find / -type f -exec du -h {} + | sort -rh | head -n 10
+    find / -type f -exec du -h {} + 2>/dev/null | sort -rh | head -n 10
 
     # Estado general de los discos por partición
     df -h
@@ -37,8 +41,12 @@ monitor_disks() {
     read -p "Ingrese la ruta para monitorear: " path
     (
         for i in {1..3000}; do
-            file_usage=$(ls -lt $path | head -n 4)
-            echo "$(date): $file_usage" >> DiskUsageReport.txt
+            file_usage=$(ls -lt $path 2>/dev/null | head -n 4)
+            if [ $? -eq 0 ]; then
+                echo "$(date): $file_usage" >> DiskUsageReport.txt
+            else
+                echo "$(date): Error accessing path $path" >> DiskUsageReport.txt
+            fi
             sleep 0.1
         done
     ) &
@@ -55,8 +63,12 @@ monitor_cpu() {
     read -p "Ingrese el ID del proceso para monitorear: " process_id
     (
         for i in {1..3000}; do
-            cpu_usage=$(ps -p $process_id -o %cpu --no-headers)
-            echo "$(date): $cpu_usage" >> CPUUsageReport.txt
+            cpu_usage=$(ps -p $process_id -o %cpu --no-headers 2>/dev/null)
+            if [ $? -eq 0 ]; then
+                echo "$(date): $cpu_usage" >> CPUUsageReport.txt
+            else
+                echo "$(date): Error fetching CPU usage for PID $process_id" >> CPUUsageReport.txt
+            fi
             sleep 0.1
         done
     ) &
@@ -73,4 +85,3 @@ while true; do
         *) echo "Opción no válida, intente nuevamente" ;;
     esac
 done
-
