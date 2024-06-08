@@ -42,10 +42,14 @@ function Monitor-Memory {
 
 function Monitor-Disks {
     # Listado de top 10 de archivos más grandes en el sistema
+    Write-Output "========================== START - Listado de top 10 de archivos más grandes en el sistema =========================="
     Get-ChildItem -Path C:\ -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property Length -Descending | Select-Object -First 10
+    Write-Output "========================== END - Listado de top 10 de archivos más grandes en el sistema =========================="
 
     # Estado general de los discos por partición
+    Write-Output "========================== START - Estado general de los discos por partición =========================="
     Get-PSDrive -PSProvider FileSystem
+    Write-Output "========================== END - Estado general de los discos por partición =========================="
 
     # Monitorear una ruta específica
     $path = Read-Host "Ingrese la ruta para monitorear"
