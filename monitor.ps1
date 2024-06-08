@@ -41,7 +41,7 @@ function Monitor-Memory {
 
 function Monitor-Disks {
     # Listado de top 10 de archivos más grandes en el sistema
-    Get-ChildItem -Path C:\ -Recurse | Sort-Object -Property Length -Descending | Select-Object -First 10
+    Get-ChildItem -Path C:\ -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property Length -Descending | Select-Object -First 10
 
     # Estado general de los discos por partición
     Get-PSDrive -PSProvider FileSystem
@@ -53,7 +53,7 @@ function Monitor-Disks {
         param($path, $outputPath)
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
-            $fileUsage = Get-ChildItem -Path $path -Recurse | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
+            $fileUsage = Get-ChildItem -Path $path -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
             $report += [PSCustomObject]@{ Timestamp = (Get-Date); FileUsage = $fileUsage }
             Start-Sleep -Milliseconds 100
         }
