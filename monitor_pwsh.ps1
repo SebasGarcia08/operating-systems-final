@@ -26,14 +26,12 @@ function Monitor-Memory {
     $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
-        $header = "Timestamp,Process ID,Memory Usage (KB)"
-        $header | Out-File -FilePath $outputPath -Encoding UTF8
         for ($i = 0; $i -lt 3000; $i++) {
             $memoryUsage = (ps -p $processId -o pmem=)
             [PSCustomObject]@{ Timestamp = (Get-Date); ProcessId = $processId; MemoryUsage = $memoryUsage } | ConvertTo-Csv -NoTypeInformation -Append | Out-File -FilePath $outputPath -Append -Encoding UTF8
             Start-Sleep -Milliseconds 100
         }
-    } -ArgumentList $processId, $outputPath | Out-Null
+    } -ArgumentList $processId, $outputPath
     Write-Host "Monitoreo de memoria iniciado en background"
 }
 

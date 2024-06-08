@@ -26,11 +26,14 @@ function Monitor-Memory {
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
     $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
+    # Initialize CSV with header
+    "Timestamp,ProcessId,MemoryUsage (KB)" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
         for ($i = 0; $i -lt 3000; $i++) {
             $memoryUsage = (Get-Process -Id $processId).WorkingSet / 1KB
-            [PSCustomObject]@{ Timestamp = (Get-Date); MemoryUsage = $memoryUsage } | Export-Csv -Path $outputPath -Append -NoTypeInformation
+            $line = "{0},{1},{2}" -f (Get-Date), $processId, $memoryUsage
+            $line | Out-File -FilePath $outputPath -Append -Encoding UTF8
             Start-Sleep -Milliseconds 100
         }
     } -ArgumentList $processId, $outputPath | Out-Null
@@ -47,11 +50,16 @@ function Monitor-Disks {
     # Monitorear una ruta específica
     $path = Read-Host "Ingrese la ruta para monitorear"
     $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
+    # Initialize CSV with header
+    "Timestamp,FilePath,LastAccessTime" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
         param($path, $outputPath)
         for ($i = 0; $i -lt 3000; $i++) {
             $fileUsage = Get-ChildItem -Path $path -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
-            [PSCustomObject]@{ Timestamp = (Get-Date); FileUsage = $fileUsage } | Export-Csv -Path $outputPath -Append -NoTypeInformation
+            foreach ($file in $fileUsage) {
+                $line = "{0},{1},{2}" -f (Get-Date), $file.FullName, $file.LastAccessTime
+                $line | Out-File -FilePath $outputPath -Append -Encoding UTF8
+            }
             Start-Sleep -Milliseconds 100
         }
     } -ArgumentList $path, $outputPath | Out-Null
@@ -74,11 +82,14 @@ function Monitor-CPU {
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
     $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
+    # Initialize CSV with header
+    "Timestamp,ProcessId,CPUUsage (%)" | Out-File -FilePath $outputPath -Encoding UTF8
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
         for ($i = 0; $i -lt 3000; $i++) {
             $cpuUsage = (Get-Process -Id $processId).CPU
-            [PSCustomObject]@{ Timestamp = (Get-Date); CPUUsage = $cpuUsage } | Export-Csv -Path $outputPath -Append -NoTypeInformation
+            $line = "{0},{1},{2}" -f (Get-Date), $processId, $cpuUsage
+            $line | Out-File -FilePath $outputPath -Append -Encoding UTF8
             Start-Sleep -Milliseconds 100
         }
     } -ArgumentList $processId, $outputPath | Out-Null
