@@ -27,8 +27,7 @@ function Monitor-Memory {
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
     $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
     Start-Job -ScriptBlock {
-        $processId = $using:processId
-        $outputPath = $using:outputPath
+        param($processId, $outputPath)
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
             $memoryUsage = (Get-Process -Id $processId).WorkingSet / 1KB
@@ -36,7 +35,7 @@ function Monitor-Memory {
             Start-Sleep -Milliseconds 100
         }
         $report | Export-Csv -Path $outputPath -NoTypeInformation
-    } | Out-Null
+    } -ArgumentList $processId, $outputPath | Out-Null
     Write-Host "Monitoreo de memoria iniciado en background"
 }
 
@@ -51,8 +50,7 @@ function Monitor-Disks {
     $path = Read-Host "Ingrese la ruta para monitorear"
     $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
     Start-Job -ScriptBlock {
-        $path = $using:path
-        $outputPath = $using:outputPath
+        param($path, $outputPath)
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
             $fileUsage = Get-ChildItem -Path $path -Recurse | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
@@ -60,7 +58,7 @@ function Monitor-Disks {
             Start-Sleep -Milliseconds 100
         }
         $report | Export-Csv -Path $outputPath -NoTypeInformation
-    } | Out-Null
+    } -ArgumentList $path, $outputPath | Out-Null
     Write-Host "Monitoreo de discos iniciado en background"
 }
 
@@ -76,8 +74,7 @@ function Monitor-CPU {
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
     $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
     Start-Job -ScriptBlock {
-        $processId = $using:processId
-        $outputPath = $using:outputPath
+        param($processId, $outputPath)
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
             $cpuUsage = (Get-Process -Id $processId).CPU
@@ -85,7 +82,7 @@ function Monitor-CPU {
             Start-Sleep -Milliseconds 100
         }
         $report | Export-Csv -Path $outputPath -NoTypeInformation
-    } | Out-Null
+    } -ArgumentList $processId, $outputPath | Out-Null
     Write-Host "Monitoreo de CPU iniciado en background"
 }
 
