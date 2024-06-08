@@ -15,27 +15,28 @@ function Monitor-Memory {
     Get-Process | Sort-Object -Property WorkingSet -Descending | Select-Object -First 10
 
     # Estado general de memoria
-    $memInfo = free -m | Select-String "Mem:"
-    $memParts = $memInfo -replace '\s+', ' ' -split ' '
-    $totalMemory = $memParts[1]
-    $usedMemory = $memParts[2]
-    $freeMemory = $memParts[3]
+    $memInfo = Get-WmiObject -Class Win32_OperatingSystem
+    $totalMemory = [math]::round($memInfo.TotalVisibleMemorySize / 1KB, 2)
+    $freeMemory = [math]::round($memInfo.FreePhysicalMemory / 1KB, 2)
+    $usedMemory = $totalMemory - $freeMemory
     Write-Output "Total Physical Memory: $totalMemory MB"
     Write-Output "Used Physical Memory: $usedMemory MB"
     Write-Output "Free Physical Memory: $freeMemory MB"
 
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
+    $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
     Start-Job -ScriptBlock {
         $processId = $using:processId
+        $outputPath = $using:outputPath
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
-            $memoryUsage = ps -p $processId -o %mem --no-headers
+            $memoryUsage = (Get-Process -Id $processId).WorkingSet / 1KB
             $report += [PSCustomObject]@{ Timestamp = (Get-Date); MemoryUsage = $memoryUsage }
             Start-Sleep -Milliseconds 100
         }
-        $report | Export-Csv -Path "MemoryUsageReport.csv" -NoTypeInformation
-    }
+        $report | Export-Csv -Path $outputPath -NoTypeInformation
+    } | Out-Null
     Write-Host "Monitoreo de memoria iniciado en background"
 }
 
@@ -44,20 +45,22 @@ function Monitor-Disks {
     Get-ChildItem -Path C:\ -Recurse | Sort-Object -Property Length -Descending | Select-Object -First 10
 
     # Estado general de los discos por partición
-    df -h
+    Get-PSDrive -PSProvider FileSystem
 
     # Monitorear una ruta específica
     $path = Read-Host "Ingrese la ruta para monitorear"
+    $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
     Start-Job -ScriptBlock {
         $path = $using:path
+        $outputPath = $using:outputPath
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
-            $fileUsage = ls -lt $path | Select-String -First 3
+            $fileUsage = Get-ChildItem -Path $path -Recurse | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
             $report += [PSCustomObject]@{ Timestamp = (Get-Date); FileUsage = $fileUsage }
             Start-Sleep -Milliseconds 100
         }
-        $report | Export-Csv -Path "DiskUsageReport.csv" -NoTypeInformation
-    }
+        $report | Export-Csv -Path $outputPath -NoTypeInformation
+    } | Out-Null
     Write-Host "Monitoreo de discos iniciado en background"
 }
 
@@ -66,21 +69,23 @@ function Monitor-CPU {
     Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10
 
     # Estado general de la CPU
-    $cpuInfo = top -b -n1 | Select-String "Cpu(s)"
+    $cpuInfo = Get-WmiObject -Class Win32_Processor | Select-Object -Property LoadPercentage
     Write-Output $cpuInfo
 
     # Monitorear un proceso específico
     $processId = Read-Host "Ingrese el ID del proceso para monitorear"
+    $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
     Start-Job -ScriptBlock {
         $processId = $using:processId
+        $outputPath = $using:outputPath
         $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
-            $cpuUsage = ps -p $processId -o %cpu --no-headers
+            $cpuUsage = (Get-Process -Id $processId).CPU
             $report += [PSCustomObject]@{ Timestamp = (Get-Date); CPUUsage = $cpuUsage }
             Start-Sleep -Milliseconds 100
         }
-        $report | Export-Csv -Path "CPUUsageReport.csv" -NoTypeInformation
-    }
+        $report | Export-Csv -Path $outputPath -NoTypeInformation
+    } | Out-Null
     Write-Host "Monitoreo de CPU iniciado en background"
 }
 
