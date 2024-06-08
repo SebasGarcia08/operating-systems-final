@@ -65,6 +65,7 @@ function Monitor-Disks {
 function Monitor-CPU {
     # Listado de top 10 de procesos con mayor uso de CPU
     Write-Output "========================== START - top 10 de procesos con mayor uso de CPU =========================="
+    Write-Output "ProcessName, ID, CPU, WorkingSet, VirtualMemorySize, TotalProcessorTime, UserProcessorTime, PrivilegedProcessorTime"
     Get-Process | Sort-Object -Property CPU -Descending | Select-Object -First 10
     Write-Output "========================== END - top 10 de procesos con mayor uso de CPU =========================="
 
