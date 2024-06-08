@@ -28,13 +28,11 @@ function Monitor-Memory {
     $outputPath = Join-Path -Path $PWD -ChildPath "MemoryUsageReport.csv"
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
-        $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
             $memoryUsage = (Get-Process -Id $processId).WorkingSet / 1KB
-            $report += [PSCustomObject]@{ Timestamp = (Get-Date); MemoryUsage = $memoryUsage }
+            [PSCustomObject]@{ Timestamp = (Get-Date); MemoryUsage = $memoryUsage } | Export-Csv -Path $outputPath -Append -NoTypeInformation
             Start-Sleep -Milliseconds 100
         }
-        $report | Export-Csv -Path $outputPath -NoTypeInformation
     } -ArgumentList $processId, $outputPath | Out-Null
     Write-Host "Monitoreo de memoria iniciado en background"
 }
@@ -51,13 +49,11 @@ function Monitor-Disks {
     $outputPath = Join-Path -Path $PWD -ChildPath "DiskUsageReport.csv"
     Start-Job -ScriptBlock {
         param($path, $outputPath)
-        $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
             $fileUsage = Get-ChildItem -Path $path -Recurse -ErrorAction SilentlyContinue | Sort-Object -Property LastAccessTime -Descending | Select-Object -First 3
-            $report += [PSCustomObject]@{ Timestamp = (Get-Date); FileUsage = $fileUsage }
+            [PSCustomObject]@{ Timestamp = (Get-Date); FileUsage = $fileUsage } | Export-Csv -Path $outputPath -Append -NoTypeInformation
             Start-Sleep -Milliseconds 100
         }
-        $report | Export-Csv -Path $outputPath -NoTypeInformation
     } -ArgumentList $path, $outputPath | Out-Null
     Write-Host "Monitoreo de discos iniciado en background"
 }
@@ -75,13 +71,11 @@ function Monitor-CPU {
     $outputPath = Join-Path -Path $PWD -ChildPath "CPUUsageReport.csv"
     Start-Job -ScriptBlock {
         param($processId, $outputPath)
-        $report = @()
         for ($i = 0; $i -lt 3000; $i++) {
             $cpuUsage = (Get-Process -Id $processId).CPU
-            $report += [PSCustomObject]@{ Timestamp = (Get-Date); CPUUsage = $cpuUsage }
+            [PSCustomObject]@{ Timestamp = (Get-Date); CPUUsage = $cpuUsage } | Export-Csv -Path $outputPath -Append -NoTypeInformation
             Start-Sleep -Milliseconds 100
         }
-        $report | Export-Csv -Path $outputPath -NoTypeInformation
     } -ArgumentList $processId, $outputPath | Out-Null
     Write-Host "Monitoreo de CPU iniciado en background"
 }
